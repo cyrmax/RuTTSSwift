@@ -1,10 +1,35 @@
 import Foundation
 import CRuTTS
 
+public typealias CRuTTSCallBackType = @convention(c) (UnsafeMutableRawPointer?, Int, UnsafeMutableRawPointer?) -> Int32
+
+public func CRuTTSCallBack(buffer: UnsafeMutableRawPointer?, bufferSize: Int, userData: UnsafeMutableRawPointer?) -> Int32 {
+  print("callback called")
+  print("Size is \(bufferSize)")
+  print("Buffer is: ")
+  print(buffer)
+  let data = Data(bytes: buffer!, count: bufferSize)
+  print(data)
+  print(data.debugDescription)
+  return 1
+}
+
+
+public class RuTTSWrapper {
+  private let waveBufferSize: Int = 4096
+  var waveBuffer: UnsafeMutableRawPointer
+
+  public init() {
+    self.waveBuffer = UnsafeMutableRawPointer.allocate(byteCount: waveBufferSize, alignment: 1)
+  }
 
 public func makeSpeech(str: String) {
-  let cfstr = str as CFString
+  let callback: CRuTTSCallBackType = CRuTTSCallBack
+ru_tts_transfer(str, waveBuffer, waveBufferSize, callback, nil, 1, 1, 1, 1, 1)
+}
 
 
-  CRuTTS.ru_tts_transfer(, <#T##wave_buffer: UnsafeMutableRawPointer!##UnsafeMutableRawPointer!#>, <#T##wave_buffer_size: Int##Int#>, <#T##wave_consumer: ru_tts_callback!##ru_tts_callback!##(UnsafeMutableRawPointer?, Int, UnsafeMutableRawPointer?) -> Int32#>, <#T##user_data: UnsafeMutableRawPointer!##UnsafeMutableRawPointer!#>, <#T##voice: Int32##Int32#>, <#T##rate: Int32##Int32#>, <#T##pitch: Int32##Int32#>, <#T##gap_factor: Int32##Int32#>, <#T##intonation: Int32##Int32#>)
+  deinit {
+    waveBuffer.deallocate()
+  }
 }
